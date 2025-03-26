@@ -1,0 +1,32 @@
+service: alert-notifications
+useDotenv: true
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  environment:
+    SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: 'sns:*'
+          Resource: '*' # Adjust if you want to restrict to specific topics
+
+functions:
+  forwardAlert:
+    handler: src/forwardAlert.handler
+    events:
+      - sns:
+          topicName: ALERT_NOTIFICATIONS_NEW_123456
+          arn:
+            Fn::GetAtt: [AlertNotificationsTopic, TopicArn]
+
+resources:
+  Resources:
+    AlertNotificationsTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ALERT_NOTIFICATIONS_NEW_123456
